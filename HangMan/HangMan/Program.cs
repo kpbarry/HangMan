@@ -74,6 +74,42 @@ namespace HangMan
             }
         }
 
+        static void AddHighScore(int playerScore)
+        {
+            Console.WriteLine("Add your name to the high score list: ");
+            string playerName = Console.ReadLine();
+
+            //Create a gateway to the database
+            KevinEntities db = new KevinEntities();
+
+            //Create new high score object
+            HighScore newHighScore = new HighScore();
+            newHighScore.DateCreated = DateTime.Now;
+            newHighScore.Game = "Hangman";
+            newHighScore.Name = playerName;
+            newHighScore.Score = playerScore;
+
+            //Add it to the database
+            db.HighScores.Add(newHighScore);
+
+            //Save changes to db
+            db.SaveChanges();
+        }
+
+        static void DisplayHighScores()
+        {
+            Console.Clear();
+            Console.WriteLine("Hangman High Scores");
+            Console.WriteLine("-----------------------------");
+
+            KevinEntities db = new KevinEntities();
+            List<HighScore> highScoreList = db.HighScores.Where(x => x.Game == "Hangman").OrderBy(x => x.Score).Take(10).ToList();
+            foreach (HighScore i in highScoreList)
+            {
+                Console.WriteLine("{0}. {1} - {2} - {3}", highScoreList.IndexOf(i) + 1, i.Name, i.Score, i.DateCreated.Value.ToShortDateString());
+            }
+        }
+
         static void HangMan()
         {
             //Get word to guess
@@ -106,7 +142,8 @@ namespace HangMan
                     if (output == word)
                     {
                         Console.Clear();
-                        Console.WriteLine("You win!!");
+                        Console.WriteLine("You win! Took " + guessCount + " guesses.");
+                        AddHighScore(guessCount);
                         playing = false;
                     }
 
@@ -118,7 +155,9 @@ namespace HangMan
                         if (guess == word)
                         {
                             Console.Clear();
-                            Console.WriteLine("You win!");
+                            Console.WriteLine("You win! Took " + guessCount + " guesses.");
+                            AddHighScore(guessCount);
+                            DisplayHighScores();
                             playing = false;
                         }
                         //Incorrect word guess
